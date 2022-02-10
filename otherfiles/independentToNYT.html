@@ -1,0 +1,54 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Wordle - The New York Times</title>
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta name="description" content="Guess the hidden word in 6 tries. A new puzzle is available each day" />
+  </head>
+  <body>
+    <script type="text/javascript">
+      const ls = window.localStorage;
+      // Ensure we're always sending something
+      let stringifiedData = '{}';
+      // Default to production
+      let url = 'https://www.nytimes.com/games/wordle'
+
+      // Don't attempt unless our user has local storage enabled
+      if (ls) {
+        const errors = [];
+        const localData = {
+          time: new Date().getTime(),
+          statistics: null,
+          darkTheme: null,
+          colorBlindTheme: null,
+        };
+
+        // Allow QA folks to switch the redirect url
+        const params = new Proxy(new URLSearchParams(window.location.search), {
+          get: (searchParams, prop) => searchParams.get(prop),
+        });
+        if (params.url) url = params.url
+
+        // Attempt to pull and parse the stats and themes
+        try {
+          localData.statistics = JSON.parse(ls.getItem('statistics'));
+          localData.darkTheme = JSON.parse(ls.getItem('darkTheme'));
+          localData.colorBlindTheme = JSON.parse(ls.getItem('colorBlindTheme'));
+        } catch (e) {
+          // Anything that's not valid JSON will not be sent
+          errors.push(e);
+        }
+
+        try {
+          stringifiedData = JSON.stringify(localData);
+        } catch (e) {
+          errors.push(e);
+        }
+      }
+      
+      // Everyone will redirect, regardless of local storage
+      window.location.assign(`${url}?data=${stringifiedData}`)
+    </script>
+  </body>
+</html>
